@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import logoAsset from "@/assets/setma-logo.png.asset.json";
 
 export const STEP_LABELS = [
+  "Tipo",
   "Máquina",
   "Alarme",
   "Diagnóstico",
