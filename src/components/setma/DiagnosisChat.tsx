@@ -105,7 +105,7 @@ export function DiagnosisChat({
         />
         <PromptInputFooter className="justify-end">
           <PromptInputSubmit
-            status={isTyping ? "submitted" : undefined}
+            {...(isTyping ? { status: "submitted" as const } : {})}
             disabled={isTyping || !text.trim()}
           />
         </PromptInputFooter>
