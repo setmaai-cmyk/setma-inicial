@@ -90,9 +90,9 @@ export function DiagnosisChat({
       </Conversation>
 
       <PromptInput
-        onSubmit={(message, event) => {
+        onSubmit={(_message, event) => {
           event.preventDefault();
-          const value = (message.text ?? text).trim();
+          const value = text.trim();
           if (!value) return;
           onSend(value);
           setText("");
