@@ -551,7 +551,17 @@ function Index() {
                   }}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="s-command">Nome do comando</Label>
+                <Input
+                  id="s-command"
+                  value={commandName}
+                  onChange={(e) => setCommandName(e.target.value)}
+                  placeholder="Não informado"
+                />
+              </div>
             </div>
+
 
             <div className="space-y-2">
               <Label htmlFor="s-report">Relato do técnico</Label>
