@@ -395,7 +395,10 @@ function Index() {
               </Button>
               <Button
                 className="btn-steel"
-                disabled={hasAlarm === null || (hasAlarm && !alarmCode.trim())}
+                disabled={
+                  hasAlarm === null ||
+                  (hasAlarm && (!alarmCode.trim() || !commandName.trim()))
+                }
                 onClick={() => setStep("chat")}
               >
                 Avançar <ArrowRight className="ml-2 h-4 w-4" />
@@ -420,6 +423,7 @@ function Index() {
               onClick={() => {
                 setHasAlarm(false);
                 setAlarmCode("");
+                setCommandName("");
               }}
             >
               Não
@@ -427,14 +431,25 @@ function Index() {
           </div>
 
           {hasAlarm === true && (
-            <div className="mt-6 space-y-2 animate-in fade-in slide-in-from-top-2">
-              <Label htmlFor="alarm">Código do alarme</Label>
-              <Input
-                id="alarm"
-                value={alarmCode}
-                onChange={(e) => setAlarmCode(e.target.value)}
-                placeholder="Ex.: E-2291"
-              />
+            <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-2">
+                <Label htmlFor="alarm">Código do alarme</Label>
+                <Input
+                  id="alarm"
+                  value={alarmCode}
+                  onChange={(e) => setAlarmCode(e.target.value)}
+                  placeholder="Ex.: E-2291"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="command">Qual nome do comando?</Label>
+                <Input
+                  id="command"
+                  value={commandName}
+                  onChange={(e) => setCommandName(e.target.value)}
+                  placeholder="Ex.: Válvula solenoide Y3"
+                />
+              </div>
             </div>
           )}
         </StepShell>
