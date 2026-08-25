@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { BookOpenCheck, Wrench } from "lucide-react";
+import { BookOpenCheck, Wrench, ZoomIn } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Conversation,
   ConversationContent,
