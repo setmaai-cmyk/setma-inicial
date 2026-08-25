@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { BookOpenCheck, Wrench } from "lucide-react";
+import { BookOpenCheck, Wrench, ZoomIn } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Conversation,
   ConversationContent,
@@ -90,9 +97,9 @@ export function DiagnosisChat({
       </Conversation>
 
       <PromptInput
-        onSubmit={(message, event) => {
+        onSubmit={(_message, event) => {
           event.preventDefault();
-          const value = (message.text ?? text).trim();
+          const value = text.trim();
           if (!value) return;
           onSend(value);
           setText("");
@@ -123,14 +130,40 @@ function SolutionCard({ solution }: { solution: Solution }) {
           Solução da Base Interna
         </span>
       </div>
-      <img
-        src={diagrama}
-        alt="Diagrama técnico do bloco de válvulas hidráulicas"
-        loading="lazy"
-        width={1024}
-        height={640}
-        className="h-40 w-full object-cover sm:h-48"
-      />
+      <Dialog>
+        <DialogTrigger asChild>
+          <button
+            type="button"
+            className="group relative block w-full cursor-zoom-in"
+            aria-label="Ampliar diagrama técnico"
+          >
+            <img
+              src={diagrama}
+              alt="Diagrama técnico do bloco de válvulas hidráulicas"
+              loading="lazy"
+              width={1024}
+              height={640}
+              className="h-40 w-full object-cover transition-transform duration-300 group-hover:scale-[1.02] sm:h-48"
+            />
+            <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-md bg-background/80 px-2 py-1 text-[11px] text-muted-foreground backdrop-blur">
+              <ZoomIn className="h-3.5 w-3.5 text-primary" />
+              Ver imagem completa
+            </span>
+          </button>
+        </DialogTrigger>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="text-sm">{solution.title}</DialogTitle>
+          </DialogHeader>
+          <div className="max-h-[70vh] overflow-auto rounded-md border border-border">
+            <img
+              src={diagrama}
+              alt="Diagrama técnico ampliado do bloco de válvulas hidráulicas"
+              className="w-full object-contain"
+            />
+          </div>
+        </DialogContent>
+      </Dialog>
       <div className="px-4 py-4">
         <h3 className="text-sm font-semibold">{solution.title}</h3>
         <p className="mt-1 text-xs text-muted-foreground">

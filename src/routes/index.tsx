@@ -127,7 +127,15 @@ function Index() {
     }, 1200);
   }
 
+  const FOLLOW_UPS = [
+    "Anotado. Se a pressão continuar oscilando após o passo 3, verifique também o retorno da bomba P2 — vazamento interno costuma gerar esse sintoma.",
+    "Certo. Registre a leitura do manômetro antes e depois do ajuste; vou incluir esses valores no resumo da ordem de serviço.",
+    "Entendi. Caso o alarme reincida em menos de 24h, o procedimento indica troca do cartucho da válvula (código HID-4471) e abertura de OS preventiva.",
+    "Ok. Nenhuma outra ocorrência semelhante foi registrada nesta máquina nos últimos 90 dias — siga o passo a passo e finalize o atendimento.",
+  ];
+
   function handleSend(text: string) {
+    const isFirst = messages.length === 0;
     if (!report) setReport(text);
     const userMsg: ChatMessage = {
       id: `u-${Date.now()}`,
@@ -138,25 +146,39 @@ function Index() {
     setMessages((prev) => [...prev, userMsg]);
     setIsTyping(true);
 
+    const turn = messages.filter((m) => m.role === "user").length;
+
     window.setTimeout(() => {
       setIsTyping(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `a-${Date.now()}`,
-          role: "assistant",
-          kind: "text",
-          text: `Entendido. Cruzei o relato com o histórico da **${machine || "máquina selecionada"}**${
-            hasAlarm && alarmCode ? ` e com o alarme \`${alarmCode}\`` : ""
-          }. Encontrei um procedimento compatível na base interna:`,
-        },
-        {
-          id: `s-${Date.now()}`,
-          role: "assistant",
-          kind: "solution",
-          solution: MOCK_SOLUTION,
-        },
-      ]);
+      setMessages((prev) =>
+        isFirst
+          ? [
+              ...prev,
+              {
+                id: `a-${Date.now()}`,
+                role: "assistant",
+                kind: "text",
+                text: `Entendido. Cruzei o relato com o histórico da **${machine || "máquina selecionada"}**${
+                  hasAlarm && alarmCode ? ` e com o alarme \`${alarmCode}\`` : ""
+                }. Encontrei um procedimento compatível na base interna:`,
+              },
+              {
+                id: `s-${Date.now()}`,
+                role: "assistant",
+                kind: "solution",
+                solution: MOCK_SOLUTION,
+              },
+            ]
+          : [
+              ...prev,
+              {
+                id: `a-${Date.now()}`,
+                role: "assistant",
+                kind: "text",
+                text: FOLLOW_UPS[(turn - 1) % FOLLOW_UPS.length]!,
+              },
+            ]
+      );
     }, 1000);
   }
 
