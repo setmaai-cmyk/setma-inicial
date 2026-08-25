@@ -85,6 +85,7 @@ function Index() {
   const [isScanning, setIsScanning] = useState(false);
   const [hasAlarm, setHasAlarm] = useState<boolean | null>(null);
   const [alarmCode, setAlarmCode] = useState("");
+  const [commandName, setCommandName] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [report, setReport] = useState("");
@@ -100,15 +101,14 @@ function Index() {
   });
 
   function resetAll() {
-    setStep("login");
-    setEmail("");
-    setPassword("");
+    setStep("type");
     setServiceType("");
     setMachine("");
     setMachineQuery("");
     setIsScanning(false);
     setHasAlarm(null);
     setAlarmCode("");
+    setCommandName("");
     setMessages([]);
     setReport("");
     setSolutionTitle(MOCK_SOLUTION.title);
@@ -395,7 +395,10 @@ function Index() {
               </Button>
               <Button
                 className="btn-steel"
-                disabled={hasAlarm === null || (hasAlarm && !alarmCode.trim())}
+                disabled={
+                  hasAlarm === null ||
+                  (hasAlarm && (!alarmCode.trim() || !commandName.trim()))
+                }
                 onClick={() => setStep("chat")}
               >
                 Avançar <ArrowRight className="ml-2 h-4 w-4" />
@@ -420,6 +423,7 @@ function Index() {
               onClick={() => {
                 setHasAlarm(false);
                 setAlarmCode("");
+                setCommandName("");
               }}
             >
               Não
@@ -427,14 +431,25 @@ function Index() {
           </div>
 
           {hasAlarm === true && (
-            <div className="mt-6 space-y-2 animate-in fade-in slide-in-from-top-2">
-              <Label htmlFor="alarm">Código do alarme</Label>
-              <Input
-                id="alarm"
-                value={alarmCode}
-                onChange={(e) => setAlarmCode(e.target.value)}
-                placeholder="Ex.: E-2291"
-              />
+            <div className="mt-6 space-y-4 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-2">
+                <Label htmlFor="alarm">Código do alarme</Label>
+                <Input
+                  id="alarm"
+                  value={alarmCode}
+                  onChange={(e) => setAlarmCode(e.target.value)}
+                  placeholder="Ex.: E-2291"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="command">Qual nome do comando?</Label>
+                <Input
+                  id="command"
+                  value={commandName}
+                  onChange={(e) => setCommandName(e.target.value)}
+                  placeholder="Ex.: Válvula solenoide Y3"
+                />
+              </div>
             </div>
           )}
         </StepShell>
@@ -536,7 +551,17 @@ function Index() {
                   }}
                 />
               </div>
+              <div className="space-y-2">
+                <Label htmlFor="s-command">Nome do comando</Label>
+                <Input
+                  id="s-command"
+                  value={commandName}
+                  onChange={(e) => setCommandName(e.target.value)}
+                  placeholder="Não informado"
+                />
+              </div>
             </div>
+
 
             <div className="space-y-2">
               <Label htmlFor="s-report">Relato do técnico</Label>
