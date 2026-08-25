@@ -85,6 +85,7 @@ function Index() {
   const [isScanning, setIsScanning] = useState(false);
   const [hasAlarm, setHasAlarm] = useState<boolean | null>(null);
   const [alarmCode, setAlarmCode] = useState("");
+  const [commandName, setCommandName] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [report, setReport] = useState("");
@@ -100,15 +101,14 @@ function Index() {
   });
 
   function resetAll() {
-    setStep("login");
-    setEmail("");
-    setPassword("");
+    setStep("type");
     setServiceType("");
     setMachine("");
     setMachineQuery("");
     setIsScanning(false);
     setHasAlarm(null);
     setAlarmCode("");
+    setCommandName("");
     setMessages([]);
     setReport("");
     setSolutionTitle(MOCK_SOLUTION.title);
