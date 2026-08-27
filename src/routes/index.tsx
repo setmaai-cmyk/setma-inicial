@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   ArrowRight,
   CheckCircle2,
@@ -18,6 +26,8 @@ import {
   Wrench,
   CalendarClock,
   Eye,
+  History,
+  MessageSquareText,
 } from "lucide-react";
 import logoAsset from "@/assets/setma-logo.png.asset.json";
 import { StepShell } from "@/components/setma/StepShell";
@@ -75,6 +85,21 @@ const SERVICE_TYPES = [
 
 type Step = "login" | "type" | "machine" | "alarm" | "chat" | "summary";
 
+type SavedConversation = {
+  id: string;
+  savedAt: string;
+  serviceType: string;
+  machine: string;
+  alarmCode: string;
+  commandName: string;
+  messages: ChatMessage[];
+};
+
+type ChatDraft = Omit<SavedConversation, "id" | "savedAt">;
+
+const ARCHIVE_KEY = "setma-conversation-archive";
+const DRAFT_KEY = "setma-active-conversation";
+
 function Index() {
   const [step, setStep] = useState<Step>("login");
   const [email, setEmail] = useState("");
@@ -91,6 +116,69 @@ function Index() {
   const [report, setReport] = useState("");
   const [solutionTitle, setSolutionTitle] = useState(MOCK_SOLUTION.title);
   const [observations, setObservations] = useState("");
+  const [archive, setArchive] = useState<SavedConversation[]>([]);
+  const [savedDraft, setSavedDraft] = useState<ChatDraft | null>(null);
+  const [storageReady, setStorageReady] = useState(false);
+
+  useEffect(() => {
+    try {
+      const storedArchive = window.localStorage.getItem(ARCHIVE_KEY);
+      const storedDraft = window.localStorage.getItem(DRAFT_KEY);
+      if (storedArchive) setArchive(JSON.parse(storedArchive) as SavedConversation[]);
+      if (storedDraft) setSavedDraft(JSON.parse(storedDraft) as ChatDraft);
+    } catch {
+      window.localStorage.removeItem(ARCHIVE_KEY);
+      window.localStorage.removeItem(DRAFT_KEY);
+    } finally {
+      setStorageReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady || messages.length === 0) return;
+    const draft: ChatDraft = {
+      serviceType,
+      machine,
+      alarmCode,
+      commandName,
+      messages,
+    };
+    window.localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+    setSavedDraft(draft);
+  }, [alarmCode, commandName, machine, messages, serviceType, storageReady]);
+
+  function continueDraft() {
+    if (!savedDraft) return;
+    setServiceType(savedDraft.serviceType);
+    setMachine(savedDraft.machine);
+    setAlarmCode(savedDraft.alarmCode);
+    setCommandName(savedDraft.commandName);
+    setHasAlarm(Boolean(savedDraft.alarmCode));
+    setMessages(savedDraft.messages);
+    const firstReport = savedDraft.messages.find(
+      (message) => message.role === "user" && message.kind === "text"
+    );
+    if (firstReport?.kind === "text") setReport(firstReport.text);
+    setStep("chat");
+  }
+
+  function archiveCurrentConversation() {
+    if (messages.length === 0) return;
+    const saved: SavedConversation = {
+      id: `chat-${Date.now()}`,
+      savedAt: new Date().toISOString(),
+      serviceType,
+      machine,
+      alarmCode,
+      commandName,
+      messages,
+    };
+    const next = [saved, ...archive];
+    setArchive(next);
+    window.localStorage.setItem(ARCHIVE_KEY, JSON.stringify(next));
+    window.localStorage.removeItem(DRAFT_KEY);
+    setSavedDraft(null);
+  }
 
   const results = MACHINES.filter((m) => {
     const q = machineQuery.trim().toLowerCase();
@@ -293,6 +381,70 @@ function Index() {
               );
             })}
           </div>
+          {savedDraft && savedDraft.messages.length > 0 && (
+            <div className="mt-6 flex flex-col gap-3 rounded-lg border border-primary/40 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="flex items-center gap-2 text-sm font-medium">
+                  <MessageSquareText className="h-4 w-4 text-primary" />
+                  Atendimento em andamento
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {savedDraft.machine} · {savedDraft.messages.length} mensagens
+                </p>
+              </div>
+              <Button variant="outline" onClick={continueDraft}>
+                Continuar conversa
+              </Button>
+            </div>
+          )}
+          {archive.length > 0 && (
+            <section className="mt-6 border-t border-border pt-5">
+              <h2 className="flex items-center gap-2 text-sm font-semibold">
+                <History className="h-4 w-4 text-primary" />
+                Conversas arquivadas
+              </h2>
+              <div className="mt-3 space-y-2">
+                {archive.map((item) => (
+                  <Dialog key={item.id}>
+                    <div className="flex items-center justify-between gap-3 rounded-lg border border-border bg-background/30 p-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{item.machine}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.serviceType} · {new Date(item.savedAt).toLocaleString("pt-BR")}
+                        </p>
+                      </div>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">Ver conversa</Button>
+                      </DialogTrigger>
+                    </div>
+                    <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>{item.machine}</DialogTitle>
+                        <DialogDescription>
+                          {item.serviceType} · histórico completo do diagnóstico
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-3">
+                        {item.messages.map((message) => (
+                          <div
+                            key={message.id}
+                            className={message.role === "user" ? "ml-auto max-w-[85%] rounded-lg bg-primary/15 p-3" : "max-w-[90%] rounded-lg bg-secondary p-3"}
+                          >
+                            <p className="mb-1 text-xs font-semibold text-primary">
+                              {message.role === "user" ? "Técnico" : "SeTma.IA"}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              {message.kind === "text" ? message.text : message.solution.title}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                ))}
+              </div>
+            </section>
+          )}
           <p className="mt-4 text-xs text-muted-foreground">
             Técnico logado: {email || "não informado"}
           </p>
@@ -519,6 +671,7 @@ function Index() {
               <Button
                 className="btn-steel"
                 onClick={() => {
+                   archiveCurrentConversation();
                   toast.success("Ordem de serviço salva com sucesso!", {
                     description: `OS #${Math.floor(1000 + Math.random() * 9000)} registrada para ${machine}.`,
                   });
