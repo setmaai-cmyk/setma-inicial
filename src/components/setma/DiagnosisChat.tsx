@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { BookOpenCheck, Wrench, ZoomIn } from "lucide-react";
 import {
   Dialog,
@@ -57,10 +57,20 @@ export function DiagnosisChat({
   onSend: (text: string) => void;
 }) {
   const [text, setText] = useState("");
+  const endRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, isTyping]);
+
+  useEffect(() => {
+    if (!isTyping) textareaRef.current?.focus();
+  }, [isTyping]);
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <Conversation className="max-h-[52vh] min-h-[300px] flex-1 rounded-lg border border-border bg-background/40">
+      <Conversation className="h-[48vh] min-h-[300px] flex-none rounded-lg border border-border bg-background/40 sm:h-[52vh]">
         <ConversationContent className="gap-5">
           {messages.map((m) =>
             m.kind === "text" ? (
@@ -92,20 +102,21 @@ export function DiagnosisChat({
               </MessageContent>
             </Message>
           )}
+          <div ref={endRef} aria-hidden="true" />
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
 
       <PromptInput
-        onSubmit={(_message, event) => {
-          event.preventDefault();
-          const value = text.trim();
+        onSubmit={(message) => {
+          const value = message.text.trim();
           if (!value) return;
           onSend(value);
           setText("");
         }}
       >
         <PromptInputTextarea
+          ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Descreva o sintoma observado no equipamento..."
